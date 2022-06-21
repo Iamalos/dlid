@@ -142,3 +142,58 @@ def show_images(imgs: Union[torch.Tensor, np.ndarray],
         if titles:
             ax.set_title(titles[i])
     return axes
+
+
+class Animator:
+    """Plots data in animation"""
+    def __init__(self, xlabel: str = None, ylabel: str = None,
+                 legend: List[str] = [], xlim: int = None,
+                 ylim: int = None, xscale: str = 'linear',
+                 yscale: str = 'linear',
+                 fmts: Tuple[str] = ('-', 'm--', 'g-.', 'r:'),
+                 nrows: int = 1,
+                 ncols: int = 1, figsize: Tuple[float] = (3.5, 2.5)):
+        # Incrementally plot multiple lines
+        self.fig, self.axes = plt.subplots(nrows, ncols, figsize=figsize)
+        # make self.axes always a list to run the lambda below
+        if nrows * ncols == 1:
+            self.axes = [self.axes]
+        # use lambda function to capture arguments
+        self.config_axes = lambda: set_axes(self.axes[0], xlabel, ylabel,
+                                            xlim, ylim, xscale, yscale,
+                                            legend)
+        self.X, self.Y, self.fmts = None, None, fmts
+
+    def add(self, x, y):
+        # Add multiple data points into the figure
+        if not hasattr(y, "__len__"):
+            y = [y]
+        n = len(y)
+        # if x is not a list and y is a list with more than 1 element,
+        # repeat `x` for each `y`
+        if not hasattr(x, "__len__"):
+            x = [x] * n
+
+        # Initialize X and Y during the first run.
+        # Length of x sets the number of lines to be plotted
+        if not self.X:
+            self.X = [[] for _ in x]
+        if not self.Y:
+            self.Y = [[] for _ in y]
+
+        # for each sublist in x and y append them to X and Y
+        # each sublist in X and Y refers to seperate line and
+        # is plotted it its own color
+        for i, (a, b) in enumerate(zip(x, y)):
+            if a is not None and b is not None:
+                # ith element of `x` appends to the i-th sublist of X
+                self.X[i].append(a)
+                self.Y[i].append(b)
+        self.axes[0].cla()
+
+        # Plot all of the sublists of X and Y
+        for x, y, fmt in zip(self.X, self.Y, self.fmts):
+            self.axes[0].plot(x, y, fmt)
+        self.config_axes()
+        display.display(self.fig)
+        display.clear_output(wait=True)
