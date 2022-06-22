@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Tuple
 import numpy as np
 import time
 import torch
@@ -54,16 +54,16 @@ class Accumulator:
         return self.data[idx]
 
 
-def synthetic_data(w: torch.Tensor, 
+def synthetic_data(w: torch.Tensor,
                    b: Union[torch.Tensor, float],
-                   num_examples: int) -> torch.Tensor:
+                   num_examples: int) -> Tuple[torch.Tensor, torch.Tensor]:
     """Generate y = Xw + b + noise, where y.shape is (num_examples, 1)"""
     # create X from normal distrubtion
     X = torch.normal(mean=0, std=1, size=(num_examples, len(w)))
     # Calculate y by using matrix multiplication `@`
     y = X@w + b
     y += torch.normal(mean=0, std=0.01, size=y.shape)
-    # if `w` is a 1-dimensional tensor, than y will be also 
+    # if `w` is a 1-dimensional tensor, than y will be also
     # a 1-dimensional tensor with shape [num_examples]
     # we reshape `y` to be of shape [num_examples,1]
     return X, y.reshape(-1, 1)
