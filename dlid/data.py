@@ -9,9 +9,13 @@ from torchvision import transforms
 def load_array(data_arrays: List[torch.Tensor],
                batch_size: int, is_train: bool = True) -> DataLoader:
     """Construct a PyTorch data iterator.
-    :data_arrays: arrays used to create TensorDataset
-    :batch_size: batch size yielded by each call to Dataloader
-    :is_train: shuffles the dataset before each iteration if `is_train`
+
+    Parameters
+    -----------
+    data_arrays (List[torch.Tensor]) : arrays used to create TensorDataset
+    batch_size (int) : batch size yielded by each call to Dataloader
+    is_train (bool) : shuffles the dataset before each iteration \
+    if `is_train` is true
     """
     # Analagous to data.TensorDataset(data_arrays[0], data_arrays[1], ...)
     dataset = data.TensorDataset(*data_arrays)
@@ -33,7 +37,15 @@ def get_fashion_mnist_labels(labels: List[float]) -> List[str]:
 def load_data_fashion_mnist(batch_size: int,
                             resize: Union[Tuple[int], int] = None) \
                             -> Tuple[DataLoader, DataLoader]:
-    """Download the Fashion-MNIST dataset and load it into memory"""
+    """Download the Fashion-MNIST dataset and load it into memory
+
+    Parameters
+    -----------
+    batch_size (int) : size of batch to use for `DataLoader`
+    resize (tuple[int] | int) : if image should be resized to a
+    specific width / height
+
+    """
     trans = [transforms.ToTensor()]
     # if resize, than add this as a first transformation
     if resize:

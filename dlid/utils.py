@@ -67,3 +67,17 @@ def synthetic_data(w: torch.Tensor,
     # a 1-dimensional tensor with shape [num_examples]
     # we reshape `y` to be of shape [num_examples,1]
     return X, y.reshape(-1, 1)
+
+
+def try_gpu(i: int = 0):
+    """Return gpu(i) if exists, otherwise return cpu()."""
+    if torch.cuda.device_count() > i+1:
+        return torch.device(f'cuda:{i}')
+    return torch.device('cpu')
+
+
+def try_all_gpus():
+    """Return all available GPUs, or [cpu(),] if no GPU exists."""
+    devices = [torch.device(f'cuda:{i}')
+               for i in range(torch.cuda.device_count())]
+    return devices if devices else [torch.device('cpu')]
