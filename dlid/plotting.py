@@ -147,8 +147,8 @@ def show_images(imgs: Union[torch.Tensor, np.ndarray],
 class Animator:
     """Plots data in animation"""
     def __init__(self, xlabel: str = None, ylabel: str = None,
-                 legend: List[str] = [], xlim: int = None,
-                 ylim: int = None, xscale: str = 'linear',
+                 legend: List[str] = [], xlim: Union[list[int], int] = None,
+                 ylim: Union[list[int], int] = None, xscale: str = 'linear',
                  yscale: str = 'linear',
                  fmts: Tuple[str] = ('-', 'm--', 'g-.', 'r:'),
                  nrows: int = 1,
