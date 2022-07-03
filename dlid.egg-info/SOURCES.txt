@@ -1,0 +1,12 @@
+README.md
+setup.py
+dlid/__init__.py
+dlid/data.py
+dlid/net.py
+dlid/plotting.py
+dlid/utils.py
+dlid.egg-info/PKG-INFO
+dlid.egg-info/SOURCES.txt
+dlid.egg-info/dependency_links.txt
+dlid.egg-info/requires.txt
+dlid.egg-info/top_level.txt

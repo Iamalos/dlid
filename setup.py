@@ -17,9 +17,11 @@ setup(
     packages=find_packages(include=['dlid']),
     version='0.1.0',
     description='My first Python library',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     author='ID',
     license='MIT',
-    install_required=['numpy, torch'],
-    tests_require=['pytest'],
+    install_requires=['numpy', 'torch'],
+    tests_requires=['pytest'],
     test_suite='tests'
 )
