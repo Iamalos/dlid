@@ -5,6 +5,7 @@ from utils import Accumulator
 from typing import Union, Tuple
 from torch.utils.data.dataloader import DataLoader
 from plotting import Animator
+from dlid import data, plotting
 
 # TODO: add detail docstrings
 
@@ -115,3 +116,19 @@ def train_ch3(
     assert train_loss < 0.5, train_loss
     assert train_acc <= 1 and train_acc > 0.7, train_acc
     assert test_acc <= 1 and test_acc > 0.7, test_acc
+
+
+def predict_ch3(
+        net: Union[nn.Module, Callable[[torch.Tensor], torch.Tensor]],
+        test_iter: DataLoader,
+        n: int = 6):
+    """
+    """
+    # just get the first yielded X and y
+    for X, y in test_iter:
+        break
+    # assert?
+    trues = data.get_fashion_mnist_labels(y)
+    preds = data.get_fashion_mnist_labels(net(X).argmax(axis=1))
+    titles = [true + '\n' + pred for true, pred in zip(trues, preds)]
+    plotting.show_images(X[0:n].reshape((n, 28, 28)), 1, n, titles=titles[0:n])
