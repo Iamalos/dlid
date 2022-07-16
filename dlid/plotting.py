@@ -4,6 +4,8 @@ import numpy as np
 from IPython import display
 import torch
 
+__all__ = ['set_axes', 'plot', 'show_images', 'Animator']
+
 
 def set_axes(axes: plt.Axes, xlabel: str, ylabel: str,
              xlim: Union[int, float],

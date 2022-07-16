@@ -3,6 +3,9 @@ import numpy as np
 import time
 import torch
 
+__all__ = ['Timer', 'Accumulator', 'synthetic_data',
+           'try_gpu', 'try_all_gpus']
+
 
 class Timer:
     """Record multiple running times"""

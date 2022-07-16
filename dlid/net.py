@@ -9,6 +9,9 @@ from plotting import Animator
 
 # TODO: add detail docstrings
 
+__all__ = ['linreg', 'sgd', 'accuracy', 'evaluate_accuracy',
+           'train_epoch_ch3', 'predict_ch3']
+
 
 def linreg(X: torch.Tensor,
            w: torch.Tensor,

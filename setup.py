@@ -1,4 +1,4 @@
-from setuptools import find_packages, setup
+from setuptools import setup, find_packages  # noqa: F401
 
 # To use a consistent encoding
 from codecs import open
@@ -14,14 +14,16 @@ with open(path.join(HERE, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='dlid',
-    packages=find_packages(include=['dlid']),
-    version='0.1.0',
+    version='0.1.3',
     description='My first Python library',
     long_description=long_description,
     long_description_content_type="text/markdown",
-    author='ID',
+    author='Ivan Dolgushev',
+    author_email='ivandolgushev@gmail.com',
     license='MIT',
+    packages=["dlid"],
+    include_package_data=True,
     install_requires=['numpy', 'torch'],
-    tests_requires=['pytest'],
+    tests_require=['pytest'],
     test_suite='tests'
 )

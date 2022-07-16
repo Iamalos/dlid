@@ -5,6 +5,9 @@ from torch.utils import data
 import torchvision
 from torchvision import transforms
 
+__all__ = ['load_array', 'get_dataloader_workers',
+           'get_fashion_mnist_labels', 'load_data_fashion_mnist']
+
 
 def load_array(data_arrays: List[torch.Tensor],
                batch_size: int, is_train: bool = True) -> DataLoader:

@@ -1,1 +1,1 @@
-from dlid import net, plotting, data
+from dlid import net, plotting, data  # noqa: F401
