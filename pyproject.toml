@@ -1,0 +1,19 @@
+[project]
+name = "dlid"
+version = "0.1.6"
+authors = [
+  { name="Ivan Dolgushev", email="ivandolgushev@gmail.com" },
+]
+description = "A small example package"
+readme = "README.md"
+license = { file="LICENSE" }
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/iamalos/dlid"
+"Bug Tracker" = "https://github.com/iamalos/dlid/issues"
