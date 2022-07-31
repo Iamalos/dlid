@@ -54,3 +54,4 @@ MANIFEST
 
 # Sphinx documentation
 docs/_build/
+build
