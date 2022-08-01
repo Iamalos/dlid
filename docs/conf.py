@@ -21,6 +21,7 @@ release = '2022'
 
 extensions = [
     'recommonmark',
+    'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode'
 ]
