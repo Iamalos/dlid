@@ -1,6 +1,6 @@
 from dlid import data, plotting
 import torch
-from typing import Callable, List, Optional
+from typing import Any, Callable, List, Optional
 from torch import nn
 from .utils import Accumulator
 from typing import Union, Tuple
@@ -71,7 +71,7 @@ def accuracy(y_hat: torch.Tensor, y: torch.Tensor) -> float:
 
 
 def evaluate_accuracy(
-    net: Union[nn.Module, Callable],
+    net: Union[nn.Module, Callable[[torch.Tensor], Any]],
     data_iter: DataLoader
 ) -> float:
     """ Calculate accuracy for the net on data."
@@ -80,7 +80,7 @@ def evaluate_accuracy(
     given model on a dataset, provided by the iterator.
 
     Args:
-        net: aneural net model.
+        net: a neural net model.
         data_iter: a DataLoader to test model on.
     """
 
@@ -100,8 +100,8 @@ def evaluate_accuracy(
 def train_epoch_ch3(
         net: Union[nn.Module, Callable[[torch.Tensor], torch.Tensor]],
         train_iter: DataLoader,
-        loss: Optional[Callable[[torch.Tensor, torch.Tensor]]],
-        updater: Optional[Callable[[torch.Tensor]]]
+        loss: Optional[Callable[[torch.Tensor, torch.Tensor], torch.Tensor]],
+        updater: Optional[Callable[[torch.Tensor], Any]]
 ) -> Tuple[float, float]:
     """Trains net for one epoch
 
@@ -141,9 +141,9 @@ def train_ch3(
         net: Union[nn.Module, Callable[[torch.Tensor], torch.Tensor]],
         train_iter: DataLoader,
         test_iter: DataLoader,
-        loss: Optional[Callable[[torch.Tensor, torch.Tensor]]],
+        loss: Optional[Callable[[torch.Tensor, torch.Tensor], torch.Tensor]],
         num_epochs: int,
-        updater: Optional[Callable[[torch.Tensor]]]):
+        updater: Optional[Callable[[torch.Tensor], Any]]):
     """Fully train a model as per (chapter 3 d2l)
 
     Args:

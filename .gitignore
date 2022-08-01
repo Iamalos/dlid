@@ -27,6 +27,7 @@
 !.vscode/tasks.json
 !.vscode/launch.json
 *.code-workspace
+__pycache__
 
 ### VisualStudioCode Patch ###
 # Ignore all local history of files
