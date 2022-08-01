@@ -1,6 +1,6 @@
 from dlid import data, plotting
 import torch
-from typing import Callable, List
+from typing import Callable, List, Optional
 from torch import nn
 from .utils import Accumulator
 from typing import Union, Tuple
@@ -13,19 +13,35 @@ __all__ = ['linreg', 'sgd', 'accuracy', 'evaluate_accuracy',
            'train_epoch_ch3', 'predict_ch3']
 
 
-def linreg(X: torch.Tensor,
-           w: torch.Tensor,
-           b: Union[torch.Tensor, float]) -> torch.Tensor:
-    """Returns Linear layer defined by y = X @ w + b"""
+def linreg(
+    X: torch.Tensor,
+    w: torch.Tensor,
+    b: Union[torch.Tensor, float]
+) -> torch.Tensor:
+    """Returns a tensor defined by y = X @ w + b.
+
+    Args:
+        X: X tensor.
+        w: weights tensor.
+        b: bias tensor.
+    """
     assert X.shape[-1] == w.shape[0],  f'Got incorrect shapes \
-        for matrix multiplication. X.shape: {X.shape} and w.shape: {w.shape}'
+        for matrix multiplication. X.shape: {X.shape} and w.shape: {w.shape}.'
     return X@w + b
 
 
-def sgd(params: List[torch.Tensor], lr: float,
-        batch_size: int):
-    """Runs minibatch stochastic gradient descent with provided parameters
-    for `lr` and `batch_size`."""
+def sgd(
+    params: List[torch.Tensor],
+    lr: float,
+    batch_size: int
+):
+    """Runs single sgd update with given `lr` and `batch_size`.
+
+    Args:
+        params: list of parameters to be optimized by the sgd.
+        lr: learning rate to be used during the sgd algorithm.
+        batch_size: batch_size used for the gradient descent.
+    """
     # disable the torch gradient calculation
     # for the context
     with torch.no_grad():
@@ -35,8 +51,16 @@ def sgd(params: List[torch.Tensor], lr: float,
             param.grad.zero_()
 
 
-def accuracy(y_hat: torch.Tensor, y: torch.Tensor):
-    """Compute the number of correct predictions"""
+def accuracy(y_hat: torch.Tensor, y: torch.Tensor) -> float:
+    """Return the number of correct predictions.
+
+    Compare the estimated classes to the actual classes
+    and return the number of hits.
+
+    Args:
+        y_hat: estimated classes.
+        y: actual classes.
+    """
     # check if y_hat has more than one dimesnion and that dimension has values
     # e.g. if y is [[0.1,0.5,0.4], [0.5,0.5,0.7]] -> [1,2]
     if len(y_hat.shape) > 1 and y_hat.shape[1] > 1:
@@ -46,9 +70,21 @@ def accuracy(y_hat: torch.Tensor, y: torch.Tensor):
     return float(cmp.type(y.dtype).sum())
 
 
-def evaluate_accuracy(net: nn.Module, data_iter):
-    """Sets the network to evaluation mode and computes the
-    accuracy for a model on a dataset, provided by the iterator."""
+def evaluate_accuracy(
+    net: Union[nn.Module, Callable],
+    data_iter: DataLoader
+) -> float:
+    """ Calculate accuracy for the net on data."
+
+    Sets the network to evaluation mode and computes the accuracy for a
+    given model on a dataset, provided by the iterator.
+
+    Args:
+        net: aneural net model.
+        data_iter: a DataLoader to test model on.
+    """
+
+    # if net inherits from pytorch
     if isinstance(net, torch.nn.Module):
         # Set the model to evaluation mode
         net.eval()
@@ -64,16 +100,17 @@ def evaluate_accuracy(net: nn.Module, data_iter):
 def train_epoch_ch3(
         net: Union[nn.Module, Callable[[torch.Tensor], torch.Tensor]],
         train_iter: DataLoader,
-        loss: Callable[[torch.Tensor, torch.Tensor], None],
-        updater: Callable[[torch.Tensor], None]) -> Tuple[float, float]:
+        loss: Optional[Callable[[torch.Tensor, torch.Tensor]]],
+        updater: Optional[Callable[[torch.Tensor]]]
+) -> Tuple[float, float]:
     """Trains net for one epoch
 
-    Parameters
-    -----------
-    net: either nn.Module or function on torch.tensors representing the net
-    train_iter: Dataloader yielding batches of data
-    loss: metric used geti weights by optimizing it
-    updater: either torch.Optimizer of separate function
+    Args:
+        net: either nn.Module or a function of tensors array
+            representing the neural net.
+        train_iter: Dataloader yielding batches of train data.
+        loss: a metric to optimze by changing the weights.
+        updater: either torch.Optimizer of a function of tensors array.
 
     """
     # set the model to training mode
@@ -81,6 +118,7 @@ def train_epoch_ch3(
         net.train()
     # reserve space for loss, sum of training accuracy an no of examples
     metric = Accumulator(3)
+    # loop through the Xs and ys in the iterator
     for X, y in train_iter:
         y_hat = net(X)
         loss_ = loss(y_hat, y)
@@ -103,10 +141,20 @@ def train_ch3(
         net: Union[nn.Module, Callable[[torch.Tensor], torch.Tensor]],
         train_iter: DataLoader,
         test_iter: DataLoader,
-        loss: Callable[[torch.Tensor, torch.Tensor], None],
+        loss: Optional[Callable[[torch.Tensor, torch.Tensor]]],
         num_epochs: int,
-        updater: Callable[[torch.Tensor], None]):
-    """Train a model fully (chapter 3 d2l"""
+        updater: Optional[Callable[[torch.Tensor]]]):
+    """Fully train a model as per (chapter 3 d2l)
+
+    Args:
+        net: either nn.Module or a function of tensors array
+            representing the neural net.
+        train_iter: Dataloader yielding batches of train data.
+        test_iter: Dataloader yielding batches of test data.
+        loss: a metric to optimze by changing the weights.
+        num_epochs: number of complete runs through the data.
+        updater: either torch.Optimizer of a function of tensors array.
+    """
     animator = Animator(xlabel='epoch',
                         xlim=[1, num_epochs],
                         ylim=[0.3, 0.9],
