@@ -5,7 +5,7 @@ Submodules
 ----------
 
 dlid.deprec module
-----------------
+------------------
 
 .. automodule:: dlid.deprec
    :members:

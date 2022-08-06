@@ -1,4 +1,3 @@
-from dlid import data, plotting
 import torch
 from typing import Any, Callable, Optional
 from torch import nn
@@ -6,6 +5,7 @@ from .utils import Accumulator
 from typing import Union, Tuple
 from torch.utils.data.dataloader import DataLoader
 from .plotting import Animator
+from .deprec import get_fashion_mnist_labels, show_images
 
 # TODO: add detail docstrings
 
@@ -141,7 +141,7 @@ def predict_ch3(
     for X, y in test_iter:
         break
     # assert?
-    trues = data.get_fashion_mnist_labels(y)
-    preds = data.get_fashion_mnist_labels(net(X).argmax(axis=1))
+    trues = get_fashion_mnist_labels(y)
+    preds = get_fashion_mnist_labels(net(X).argmax(axis=1))
     titles = [true + '\n' + pred for true, pred in zip(trues, preds)]
-    plotting.show_images(X[0:n].reshape((n, 28, 28)), 1, n, titles=titles[0:n])
+    show_images(X[0:n].reshape((n, 28, 28)), 1, n, titles=titles[0:n])

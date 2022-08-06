@@ -8,7 +8,7 @@ import deprecation
 import numpy as np
 from matplotlib import pyplot as plt
 from IPython import display
-from plotting import set_axes
+from .plotting import set_axes
 
 __all__ = ['load_array', 'get_dataloader_workers',
            'get_fashion_mnist_labels', 'load_data_fashion_mnist',
