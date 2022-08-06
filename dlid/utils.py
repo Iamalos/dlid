@@ -1,4 +1,4 @@
-from typing import List, Union, Tuple, Optional
+from typing import List, Tuple, Optional
 import numpy as np
 import time
 import torch
@@ -9,8 +9,8 @@ from IPython import display
 from numbers import Number
 from torch import nn
 
-__all__ = ['Timer', 'Accumulator', 'synthetic_data',
-           'try_gpu', 'try_all_gpus']
+__all__ = ['Timer', 'Accumulator', 'try_gpu', 'try_all_gpus',
+           'add_to_class', 'HyperParameters', 'ProgressBoard', 'Module']
 
 
 class Timer:
@@ -83,9 +83,6 @@ class Accumulator:
     def __getitem__(self, idx: int):
         """Getter - simply return an element by index from self.data."""
         return self.data[idx]
-
-
-
 
 
 def try_gpu(i: int = 0):
