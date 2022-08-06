@@ -7,6 +7,7 @@ from matplotlib import pyplot as plt
 import collections
 from IPython import display
 from numbers import Number
+from torch import nn
 
 __all__ = ['Timer', 'Accumulator', 'synthetic_data',
            'try_gpu', 'try_all_gpus']
@@ -84,25 +85,17 @@ class Accumulator:
         return self.data[idx]
 
 
-def synthetic_data(w: torch.Tensor,
-                   b: Union[torch.Tensor, float],
-                   num_examples: int) -> Tuple[torch.Tensor, torch.Tensor]:
-    """Generate y = Xw + b + noise, where y.shape is (num_examples, 1)"""
-    # create X from normal distrubtion
-    X = torch.normal(mean=0, std=1, size=(num_examples, len(w)))
-    # Calculate y by using matrix multiplication `@`
-    y = X@w + b
-    y += torch.normal(mean=0, std=0.01, size=y.shape)
-    # if `w` is a 1-dimensional tensor, than y will be also
-    # a 1-dimensional tensor with shape [num_examples]
-    # we reshape `y` to be of shape [num_examples,1]
-    return X, y.reshape(-1, 1)
+
 
 
 def try_gpu(i: int = 0):
     """Return gpu(i) if exists, otherwise return cpu()."""
     if torch.cuda.device_count() > i+1:
         return torch.device(f'cuda:{i}')
+    return torch.device('cpu')
+
+
+def cpu():
     return torch.device('cpu')
 
 
@@ -294,3 +287,64 @@ class ProgressBoard(HyperParameters):
         display.display(self.fig)
         # To plot on the same graph
         display.clear_output(wait=True)
+
+
+class Module(nn.Module, HyperParameters):
+    """The base class for all the models in the course.
+
+    Args:
+        plot_train_per_epoch:
+        plot_valid_per_epoch:
+        board: ProgressBoard for plotting data.
+
+        TODO: complete doc string
+    """
+    def __init__(
+        self,
+        plot_train_per_epoch: int = 2,
+        plot_valid_per_epoch: int = 1
+    ):
+        super().__init__()
+        self.save_hyperparameters()
+        self.board = ProgressBoard()
+
+    def loss(self, y_hat, y):
+        """TODO"""
+        raise NotImplementedError
+
+    def forward(self, X):
+        """TODO"""
+        assert hasattr(self, 'net'), 'Neural network is not defined.'
+        return self.net(X)
+
+    def plot(self, key, value, train):
+        """TODO"""
+        assert hasattr(self, 'trainer'), 'Trainer is not inited.'
+        self.board.xlabel = 'epoch'
+        if train:
+            # ??????
+            x = self.trainer.train_batch_idx / self.trainer.num_train_batches
+            n = self.trainer.num_train_batches / self.plot_train_per_epoch
+        else:
+            x = self.trainer.epoch + 1
+            n = self.trainer.num_val_batches / self.plot_valid_per_epoch
+
+        self.board.draw(x,
+                        value.to(cpu()).detach().numpy(),
+                        ('train_' if train else 'val_') + key,
+                        every_n=int(n))
+
+    def training_step(self, batch):
+        """TODO"""
+        # ????
+        loss = self.loss(self(*batch[:-1]), batch[-1])
+        self.plot('loss', loss, train=True)
+
+    def validation_step(self, batch):
+        """TODO"""
+        loss = self.loss(self(*batch[:-1]), batch[-1])
+        self.plot('loss', loss, train=False)
+
+    def configure_optimizers(self):
+        """TODO"""
+        raise NotImplementedError

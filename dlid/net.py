@@ -1,6 +1,6 @@
 from dlid import data, plotting
 import torch
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, Optional
 from torch import nn
 from .utils import Accumulator
 from typing import Union, Tuple
@@ -9,46 +9,8 @@ from .plotting import Animator
 
 # TODO: add detail docstrings
 
-__all__ = ['linreg', 'sgd', 'accuracy', 'evaluate_accuracy',
+__all__ = ['accuracy', 'evaluate_accuracy',
            'train_epoch_ch3', 'predict_ch3']
-
-
-def linreg(
-    X: torch.Tensor,
-    w: torch.Tensor,
-    b: Union[torch.Tensor, float]
-) -> torch.Tensor:
-    """Returns a tensor defined by y = X @ w + b.
-
-    Args:
-        X: X tensor.
-        w: weights tensor.
-        b: bias tensor.
-    """
-    assert X.shape[-1] == w.shape[0],  f'Got incorrect shapes \
-        for matrix multiplication. X.shape: {X.shape} and w.shape: {w.shape}.'
-    return X@w + b
-
-
-def sgd(
-    params: List[torch.Tensor],
-    lr: float,
-    batch_size: int
-):
-    """Runs single sgd update with given `lr` and `batch_size`.
-
-    Args:
-        params: list of parameters to be optimized by the sgd.
-        lr: learning rate to be used during the sgd algorithm.
-        batch_size: batch_size used for the gradient descent.
-    """
-    # disable the torch gradient calculation
-    # for the context
-    with torch.no_grad():
-        for param in params:
-            # perform the update
-            param -= lr * param.grad / batch_size
-            param.grad.zero_()
 
 
 def accuracy(y_hat: torch.Tensor, y: torch.Tensor) -> float:

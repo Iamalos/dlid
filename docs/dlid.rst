@@ -4,10 +4,10 @@ dlid package
 Submodules
 ----------
 
-dlid.data module
+dlid.deprec module
 ----------------
 
-.. automodule:: dlid.data
+.. automodule:: dlid.deprec
    :members:
    :undoc-members:
    :show-inheritance:
