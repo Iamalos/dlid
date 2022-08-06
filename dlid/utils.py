@@ -6,6 +6,7 @@ import inspect
 from matplotlib import pyplot as plt
 import collections
 from IPython import display
+from numbers import Number
 
 __all__ = ['Timer', 'Accumulator', 'synthetic_data',
            'try_gpu', 'try_all_gpus']
@@ -175,10 +176,22 @@ class ProgressBoard(HyperParameters):
     Plots data in animation.
 
     Args:
-        xlabel:
+        xlabel: label for `x` axis.
+        ylabel: label for `x` axis.
+        xlim: `x` limit values.
+        ylim: `y` limit values.
+        xscale: x scale, defaults to 'linear.
+        yscale: y scale, defaults to 'linear.
+        ls: list of linestyles to be used.
+        colors: list of colors to be used.
+        fig:
+        axes: axes to be used for plotting. If this
+            is not provided, creates new axes.
+        figsize: size of the figure to be displayed.
+        display: whether to show the plot.
     """
     def __init__(
-        self, 
+        self,
         xlabel: Optional[str],
         ylabel: Optional[str],
         xlim: Optional[float],
@@ -192,31 +205,43 @@ class ProgressBoard(HyperParameters):
         figsize: Tuple[float, float] = (3.5, 2.5),
         display: bool = True
     ):
-        
+
         self.save_hyperparameters()
-                  
-    def draw(self, x, y, label, every_n=1):
+
+    def draw(
+        self,
+        x: Number,
+        y: Number,
+        label: str,
+        every_n: int = 1
+    ):
         """
-        Interactively plot `x` and `y`
+        Interactively plot `x` and `y`.
 
         Args:
-            
-        Draw_points stores all the points
-        points stores raw_points of length `every_n`
-        data stores only the points for plotting which can be averages if every_n != 1
+            x: x numeric values.
+            y: y numeric values.
+            label: label of a line to be plotted.
+            every_n: over what range to average the data. Defaults to one
+                in which case every point is plotted.
+            data: stores averages over `every_n` x and y points for plotting.
+
         """
-        
+        # Store pairs of x and y in a named tuple for ease of use.
         Point = collections.namedtuple('Point', ['x', 'y'])
-        # During the first run initialize `raw_points` and `data` Ordered dicts
-        if not hasattr(self, 'raw_points'):
-            self.raw_points = collections.OrderedDict()
+
+        # Initialize `_raw_points` and `data` ordered dicts.
+        if not hasattr(self, 'data'):
+            self._raw_points = collections.OrderedDict()
             self.data = collections.OrderedDict()
-        if label not in self.raw_points:
-            self.raw_points[label] = []
+        if label not in self.data:
+            self._raw_points[label] = []
             self.data[label] = []
 
-        # Copy `raw_points` and `data` to temporary dictionaries.
-        points = self.raw_points[label]
+        # Copy `_raw_points` and `data` for a label to temporary arrays.
+        # When points and line changes, `self._raw_points`` and `self.data`
+        # changes as well.
+        points = self._raw_points[label]
         line = self.data[label]
         points.append(Point(x, y))
 
@@ -224,37 +249,48 @@ class ProgressBoard(HyperParameters):
         # there are `every_n` items.
         if len(points) != every_n:
             return
-        mean = lambda x: sum(x) / len(x)
-        # Add to line arrays actual points (x and y) to plot.
+
+        def mean(x): sum(x) / len(x)
+
+        # Add to line array averaged x and y points to plot.
         line.append(Point(mean([p.x for p in points]),
                           mean([p.y for p in points])))
-        
+
         # clear points array after reaching `every_n` items.
         points.clear()
 
         if not self.display:
-            return        
+            return
+
         display.set_matplotlib_formats('png')
 
         # Prepare for the first plotting.
         if self.fig is None:
             self.fig = plt.figure(figsize=self.figsize)
         plt_lines, labels = [], []
-        
+
         for (k, v), ls, color, in zip(self.data.items(), self.ls, self.colors):
             # store in array to later call `axes.legend`
-            plt_lines.append(plt.plot([p.x for p in v], [p.y for p in v], linestyle=ls, color=color)[0])
+            plt_lines.append(plt.plot(
+                [p.x for p in v],
+                [p.y for p in v],
+                linestyle=ls,
+                color=color)[0]
+            )
             labels.append(k)
+
         axes = self.axes if self.axes else plt.gca()
-        if self.xlim: axes.set_xlim(self.xlim)
-        if self.ylim: axes.set_xlim(self.ylim)
-         
+
+        # Set axis limits, labels and scale.
+        if self.xlim: axes.set_xlim(self.xlim)  # noqa: E701
+        if self.ylim: axes.set_xlim(self.ylim)  # noqa: E701
+
         axes.set_xlabel(self.xlabel)
         axes.set_ylabel(self.ylabel)
         axes.set_xscale(self.xscale)
         axes.set_yscale(self.yscale)
         axes.legend(plt_lines, labels)
-        
+
         display.display(self.fig)
         # To plot on the same graph
         display.clear_output(wait=True)
