@@ -35,7 +35,7 @@ def load_array(
         batch_size: batch size yielded by each call to Dataloader.
         is_train: shuffles the dataset before each iteration
             if `is_train` is true. Defaults to true.
-z
+
     Returns:
         DataLoader: the dataloader (iterator).
     """

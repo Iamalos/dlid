@@ -12,14 +12,6 @@ dlid.deprec module
    :undoc-members:
    :show-inheritance:
 
-dlid.net module
----------------
-
-.. automodule:: dlid.net
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 dlid.plotting module
 --------------------
 

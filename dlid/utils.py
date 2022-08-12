@@ -345,3 +345,80 @@ class Module(nn.Module, HyperParameters):
     def configure_optimizers(self):
         """TODO"""
         raise NotImplementedError
+
+
+class DataModule(HyperParameters):
+    """
+    The base class for the data.
+
+    A data loader is a generator that yields a batch of data every time
+     it is called. The batch is then fed into the `training_step` method
+     of Module to compute loss.
+
+     Args:
+        root: path to the data folder.
+        num_worksers: number of processors to include.
+
+    """
+    def __init__(self, root: str = '../data', num_workers: int = 4):
+        self.save_hyperparameters()
+
+    def get_dataloader(self, train: bool):
+        """ ??? """
+        return NotImplementedError
+
+    def train_dataloader(self):
+        """Return the train dataloader."""
+        return self.get_dataloader(train=True)
+
+    def val_dataloader(self):
+        """Return the validation dataloader."""
+        return self.get_dataloader(test=False)
+
+
+class Trainer(HyperParameters):
+    """
+    Base class used to train learnable parameters.
+    """
+    def __init__(
+        self,
+        max_epochs: int,
+        num_gpus: int = 0,
+        gradient_clip_value=0
+    ):
+        self.save_hyperparameters()
+        assert num_gpus == 0, 'No GPU support yet'
+
+    def prepare_data(self, data):
+        self.train_dataloader = data.train_dataloader
+        self.val_dataloader = data.val_dataloader
+        self.num_train_batches = len(self.train_dataloader)
+        self.num_val_batches = (len(self.val_dataloader)
+                                if self.val_dataloader is not None else 0)
+
+    def prepare_model(self, model: Module):
+        model.trainer = self
+        model.board.xlim = [0, self.max_epochs]
+        self.model = model
+
+    def fit(self, model: Module, data: DataModule):
+        """ Fit the model on data.
+
+        Prepare the data and the model, configure optimizers
+        and fit each epoch.
+
+        Args:
+            model: model that inherits from Module to be fit on the data.
+            data: dataloader that inherits from DataModuel to be used
+                when fitting the data.
+
+        """
+        self.prepare_data(data)
+        self.prepare_model(model)
+        self.optim = model.configure_optimizers()
+        self.epoch = 0
+        self.train_batch_idx = 0
+        self.val_batch_idx = 0
+        # why self.epoch?
+        for self.epoch in range(self.max_epochs):
+            self.fit_epoch()
