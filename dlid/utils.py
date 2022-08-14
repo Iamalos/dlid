@@ -10,7 +10,8 @@ from numbers import Number
 from torch import nn
 
 __all__ = ['Timer', 'Accumulator', 'try_gpu', 'try_all_gpus',
-           'add_to_class', 'HyperParameters', 'ProgressBoard', 'Module']
+           'add_to_class', 'HyperParameters', 'ProgressBoard', 'Module',
+           'DataModule', 'Trainer']
 
 
 class Timer:

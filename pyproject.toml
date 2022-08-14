@@ -1,6 +1,6 @@
 [project]
 name = "dlid"
-version = "0.1.10"
+version = "0.1.11"
 authors = [
   { name="Ivan Dolgushev", email="ivandolgushev@gmail.com" },
 ]
