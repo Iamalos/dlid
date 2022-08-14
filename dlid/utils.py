@@ -183,10 +183,10 @@ class ProgressBoard(HyperParameters):
     """
     def __init__(
         self,
-        xlabel: Optional[str],
-        ylabel: Optional[str],
-        xlim: Optional[float],
-        ylim: Optional[float],
+        xlabel: Optional[str] = None,
+        ylabel: Optional[str] = None,
+        xlim: Optional[float] = None,
+        ylim: Optional[float] = None,
         xscale: str = 'linear',
         yscale: str = 'linear',
         ls: List[str] = ['-', '--', '-.', ':'],
