@@ -290,7 +290,7 @@ class ProgressBoard(HyperParameters):
 class Module(nn.Module, HyperParameters):
     """The base class for all the models in the course.
 
-    Args:
+    Attributes:
         plot_train_per_epoch:
         plot_valid_per_epoch:
         board: ProgressBoard for plotting data.
@@ -356,13 +356,36 @@ class DataModule(HyperParameters):
      it is called. The batch is then fed into the `training_step` method
      of Module to compute loss.
 
-     Args:
+     Attributes:
         root: path to the data folder.
         num_worksers: number of processors to include.
 
     """
     def __init__(self, root: str = '../data', num_workers: int = 4):
         self.save_hyperparameters()
+
+    def get_tensorloader(
+        self,
+        tensors: List[torch.Tensor],
+        train: bool,
+        indices: slice = slice(0, None)
+    ) -> torch.utils.data.DataLoader:
+        """
+        Create torch DataLoader from the tensors.
+
+        Args:
+            tensors: list of tensors (e.g. X and y).
+            train: true if DataLoader for training.
+            indices: slice to be used on tensors to create a DataLoader.
+                In slice None means to the end.
+        """
+        # for each tensor in tensors select a slice given by indices
+        tensors = [tensor[indices] for tensor in tensors]
+        dataset = torch.utils.data.TensorDataset(*tensors)
+        return torch.utils.data.DataLoader(
+            dataset,
+            batch_size=self.batch_size,
+            shuffle=train)
 
     def get_dataloader(self, train: bool):
         """ ??? """
@@ -380,6 +403,12 @@ class DataModule(HyperParameters):
 class Trainer(HyperParameters):
     """
     Base class used to train learnable parameters.
+
+    Attributes:
+        max_epochs:
+        num_gpus:
+        gradient_clip_value:
+
     """
     def __init__(
         self,
@@ -423,3 +452,46 @@ class Trainer(HyperParameters):
         # why self.epoch?
         for self.epoch in range(self.max_epochs):
             self.fit_epoch()
+
+
+class SyntheticRegressionData(DataModule):
+    """
+    Generates linear tensors with simple noise.
+
+    Attributes:
+        w: weight tensor.
+        b: bias tensor.
+        noise: additive noise that follows Normal distribution:
+            Normal N(0, 1)*noise.
+        num_train: number of training examples.
+        num_val: number of validations examples.
+        batch_size: batch size to be used.
+    """
+    def __init__(
+        self,
+        w: torch.Tensor,
+        b: torch.Tensor,
+        noise: float = 0.01,
+        num_train: int = 100,
+        num_val: int = 1000,
+        batch_size: int = 32
+    ):
+        super().__init__()
+        self.save_hyperparameters()
+        n = num_train + num_val
+        # Create X values that follows N(0, 1)
+        self.X = torch.randn(n, len(w))
+        noise = torch.randn(n, 1) * noise
+        # Linear transformation with added noise
+        self.y = self.X @ w.reshape((-1, 1)) + b + noise
+
+    def get_dataloader(self, train: bool) -> torch.utils.data.DataLoader:
+        """"
+        Create a torch DataLoader for the data.
+
+        Args:
+            train: true if DataLoader for training.
+        """
+        indices = (slice(0, self.num_train) if train
+                   else slice(self.num_train, None))
+        return self.get_tensorloader((self.X, self.y), train, indices)
