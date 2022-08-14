@@ -1,6 +1,10 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "dlid"
-version = "0.1.13"
+version = "0.1.14"
 authors = [
   { name="Ivan Dolgushev", email="ivandolgushev@gmail.com" },
 ]
