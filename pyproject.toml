@@ -4,9 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dlid"
-version = "0.1.14"
+version = "0.1.15"
 authors = [
   { name="Ivan Dolgushev", email="ivandolgushev@gmail.com" },
+]
+dependencies = [
+  "numpy",
+  "torch",
+  "deprecation"
 ]
 description = "A small example package"
 readme = "README.md"
