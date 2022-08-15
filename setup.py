@@ -12,18 +12,19 @@ HERE = path.abspath(path.dirname(__file__))
 with open(path.join(HERE, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
-setup(
-    name='dlid',
-    version='0.1.13',
-    description='My first Python library',
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    author='Ivan Dolgushev',
-    author_email='ivandolgushev@gmail.com',
-    license='MIT',
-    packages=["dlid"],
-    include_package_data=True,
-    install_requires=['numpy', 'torch'],
-    tests_require=['pytest'],
-    test_suite='tests'
-)
+setup()
+# setup(
+#     name='dlid',
+#     version='0.1.13',
+#     description='My first Python library',
+#     long_description=long_description,
+#     long_description_content_type="text/markdown",
+#     author='Ivan Dolgushev',
+#     author_email='ivandolgushev@gmail.com',
+#     license='MIT',
+#     packages=["dlid"],
+#     include_package_data=True,
+#     install_requires=['numpy', 'torch'],
+#     tests_require=['pytest'],
+#     test_suite='tests'
+# )

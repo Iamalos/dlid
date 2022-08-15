@@ -11,7 +11,7 @@ from torch import nn
 
 __all__ = ['Timer', 'Accumulator', 'try_gpu', 'try_all_gpus',
            'add_to_class', 'HyperParameters', 'ProgressBoard', 'Module',
-           'DataModule', 'Trainer']
+           'DataModule', 'Trainer', 'SyntheticRegressionData']
 
 
 class Timer:
