@@ -420,8 +420,8 @@ class Trainer(HyperParameters):
         assert num_gpus == 0, 'No GPU support yet'
 
     def prepare_data(self, data):
-        self.train_dataloader = data.train_dataloader
-        self.val_dataloader = data.val_dataloader
+        self.train_dataloader = data.train_dataloader()
+        self.val_dataloader = data.val_dataloader()
         self.num_train_batches = len(self.train_dataloader)
         self.num_val_batches = (len(self.val_dataloader)
                                 if self.val_dataloader is not None else 0)
