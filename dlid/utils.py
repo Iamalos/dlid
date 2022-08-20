@@ -397,7 +397,7 @@ class DataModule(HyperParameters):
 
     def val_dataloader(self):
         """Return the validation dataloader."""
-        return self.get_dataloader(test=False)
+        return self.get_dataloader(train=False)
 
 
 class Trainer(HyperParameters):
@@ -419,7 +419,7 @@ class Trainer(HyperParameters):
         self.save_hyperparameters()
         assert num_gpus == 0, 'No GPU support yet'
 
-    def prepare_data(self, data):
+    def prepare_data(self, data: DataModule):
         self.train_dataloader = data.train_dataloader()
         self.val_dataloader = data.val_dataloader()
         self.num_train_batches = len(self.train_dataloader)
