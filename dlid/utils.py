@@ -334,9 +334,12 @@ class Module(nn.Module, HyperParameters):
 
     def training_step(self, batch):
         """TODO"""
-        # ????
+        # batch consists of [X, Y]
+        # so *batch[:-1] takes X values and 
+        # batch[-1] takes Y values
         loss = self.loss(self(*batch[:-1]), batch[-1])
         self.plot('loss', loss, train=True)
+        return loss
 
     def validation_step(self, batch):
         """TODO"""

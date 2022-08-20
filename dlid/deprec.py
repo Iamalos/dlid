@@ -19,6 +19,7 @@ from .utils import Accumulator
 
 __all__ = []
 
+
 @deprecation.deprecated(deprecated_in="0.1.11",
                         removed_in="0.2",
                         current_version="0.1.8",
