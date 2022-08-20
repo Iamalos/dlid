@@ -455,6 +455,9 @@ class Trainer(HyperParameters):
         # why self.epoch?
         for self.epoch in range(self.max_epochs):
             self.fit_epoch()
+    
+    def fit_epoch(self):
+        raise NotImplementedError
 
 
 class SyntheticRegressionData(DataModule):
