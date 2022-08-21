@@ -348,7 +348,7 @@ class Module(nn.Module, HyperParameters):
                 self.plot_valid_per_epoch
 
         self.board.draw(x,
-                        np(to(value, cpu())),
+                        numpy(to(value, cpu())),
                         ('train_' if train else 'val_') + key,
                         every_n=int(n))
 
@@ -524,3 +524,4 @@ class SyntheticRegressionData(DataModule):
 
 
 to = lambda x, *args, **kwargs: x.to(*args, **kwargs)  # noqa: E731
+numpy = lambda x, *args, **kwargs: x.detach().numpy(*args, **kwargs)  # noqa: E731 E501
