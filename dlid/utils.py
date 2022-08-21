@@ -8,6 +8,7 @@ import collections
 from IPython import display
 from numbers import Number
 from torch import nn
+from matplotlib_inline import backend_inline
 
 __all__ = ['Timer', 'Accumulator', 'try_gpu', 'try_all_gpus',
            'add_to_class', 'HyperParameters', 'ProgressBoard', 'Module',
@@ -91,6 +92,19 @@ def try_gpu(i: int = 0):
     if torch.cuda.device_count() > i+1:
         return torch.device(f'cuda:{i}')
     return torch.device('cpu')
+
+
+def use_svg_display():
+    """Use the svg format to display a plot in Jupyter.
+    Defined in :numref:`sec_calculus`"""
+    backend_inline.set_matplotlib_formats('svg')
+
+
+def set_figsize(figsize=(3.5, 2.5)):
+    """Set the figure size for matplotlib.
+    Defined in :numref:`sec_calculus`"""
+    use_svg_display()
+    plt.rcParams['figure.figsize'] = figsize
 
 
 def cpu():
@@ -253,7 +267,7 @@ class ProgressBoard(HyperParameters):
         if not self.display:
             return
 
-        display.set_matplotlib_formats('png')
+        use_svg_display()
 
         # Prepare for the first plotting.
         if self.fig is None:
@@ -273,13 +287,16 @@ class ProgressBoard(HyperParameters):
         axes = self.axes if self.axes else plt.gca()
 
         # Set axis limits, labels and scale.
+
+        axes.set_xscale(self.xscale)
+        axes.set_yscale(self.yscale)
+
         if self.xlim: axes.set_xlim(self.xlim)  # noqa: E701
         if self.ylim: axes.set_ylim(self.ylim)  # noqa: E701
 
         axes.set_xlabel(self.xlabel)
         axes.set_ylabel(self.ylabel)
-        axes.set_xscale(self.xscale)
-        axes.set_yscale(self.yscale)
+
         axes.legend(plt_lines, labels)
 
         display.display(self.fig)
@@ -327,17 +344,18 @@ class Module(nn.Module, HyperParameters):
                 self.plot_train_per_epoch
         else:
             x = self.trainer.epoch + 1
-            n = self.trainer.num_val_batches / self.plot_valid_per_epoch
+            n = self.trainer.num_val_batches / \
+                self.plot_valid_per_epoch
 
         self.board.draw(x,
-                        value.to(cpu()).detach().numpy(),
+                        np(to(value, cpu())),
                         ('train_' if train else 'val_') + key,
                         every_n=int(n))
 
     def training_step(self, batch):
         """TODO"""
         # batch consists of [X, Y]
-        # so *batch[:-1] takes X values and 
+        # so *batch[:-1] takes X values and
         # batch[-1] takes Y values
         loss = self.loss(self(*batch[:-1]), batch[-1])
         self.plot('loss', loss, train=True)
@@ -457,7 +475,7 @@ class Trainer(HyperParameters):
         # why self.epoch?
         for self.epoch in range(self.max_epochs):
             self.fit_epoch()
-    
+
     def fit_epoch(self):
         raise NotImplementedError
 
@@ -503,3 +521,6 @@ class SyntheticRegressionData(DataModule):
         indices = (slice(0, self.num_train) if train
                    else slice(self.num_train, None))
         return self.get_tensorloader((self.X, self.y), train, indices)
+
+
+to = lambda x, *args, **kwargs: x.to(*args, **kwargs)  # noqa: E731
