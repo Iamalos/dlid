@@ -274,7 +274,7 @@ class ProgressBoard(HyperParameters):
 
         # Set axis limits, labels and scale.
         if self.xlim: axes.set_xlim(self.xlim)  # noqa: E701
-        if self.ylim: axes.set_xlim(self.ylim)  # noqa: E701
+        if self.ylim: axes.set_ylim(self.ylim)  # noqa: E701
 
         axes.set_xlabel(self.xlabel)
         axes.set_ylabel(self.ylabel)
@@ -321,8 +321,10 @@ class Module(nn.Module, HyperParameters):
         self.board.xlabel = 'epoch'
         if train:
             # ??????
-            x = self.trainer.train_batch_idx / self.trainer.num_train_batches
-            n = self.trainer.num_train_batches / self.plot_train_per_epoch
+            x = self.trainer.train_batch_idx / \
+                self.trainer.num_train_batches
+            n = self.trainer.num_train_batches / \
+                self.plot_train_per_epoch
         else:
             x = self.trainer.epoch + 1
             n = self.trainer.num_val_batches / self.plot_valid_per_epoch
