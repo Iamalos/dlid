@@ -352,7 +352,7 @@ class Module(nn.Module, HyperParameters):
                         ('train_' if train else 'val_') + key,
                         every_n=int(n))
 
-    def training_step(self, batch):
+    def training_step(self, batch: List[torch.tensor]):
         """TODO"""
         # batch consists of [X, Y]
         # so *batch[:-1] takes X values and
@@ -361,7 +361,7 @@ class Module(nn.Module, HyperParameters):
         self.plot('loss', loss, train=True)
         return loss
 
-    def validation_step(self, batch):
+    def validation_step(self, batch: List[torch.tensor]):
         """TODO"""
         loss = self.loss(self(*batch[:-1]), batch[-1])
         self.plot('loss', loss, train=False)
@@ -431,6 +431,15 @@ class Trainer(HyperParameters):
         max_epochs:
         num_gpus:
         gradient_clip_value:
+        train_dataloader
+        val_dataloader
+        num_train_batches
+        num_val_batches
+        model
+        optim
+        epoch
+        train_batch_idx
+        val_batch_idx
 
     """
     def __init__(
@@ -476,8 +485,35 @@ class Trainer(HyperParameters):
         for self.epoch in range(self.max_epochs):
             self.fit_epoch()
 
+    def prepare_batch(self, batch: List[torch.tensor]):
+        """Prepares the batch befre training loop.
+
+        Args:
+            batch: sample of data yielded by DataLoader.
+        """
+        return batch
+
     def fit_epoch(self):
-        raise NotImplementedError
+        # from nn.Module - sets the model in a training mode
+        self.model.train()
+        for batch in self.train_dataloader:
+            loss = self.model.training_step(self.prepare_batch(batch))
+            self.optim.zero_grad()
+            with torch.no_grad():
+                loss.backward()
+                if self.gradient_clip_value > 0:
+                    print("NOT IMPLEMENTED YET")
+                    self.clip_gradients(self.gradient_clip_value, self.model)
+                self.optim.step()
+            self.train_batch_idx += 1
+        if self.val_dataloader is None:
+            return
+        # from nn.Module - sets the model in a training mode
+        self.model.eval()
+        for batch in self.val_dataloader:
+            with torch.no_grad():
+                self.model.validation_step(self.prepare_batch(batch))
+            self.val_batch_idx += 1
 
 
 class SyntheticRegressionData(DataModule):
@@ -488,10 +524,12 @@ class SyntheticRegressionData(DataModule):
         w: weight tensor.
         b: bias tensor.
         noise: additive noise that follows Normal distribution:
-            Normal N(0, 1)*noise.
+            Normal N(0, 1) * noise.
         num_train: number of training examples.
         num_val: number of validations examples.
         batch_size: batch size to be used.
+        X: randomly generated values from Normal distrubution.
+        y: linear function of `X` values and some `noise`
     """
     def __init__(
         self,
@@ -516,11 +554,107 @@ class SyntheticRegressionData(DataModule):
         Create a torch DataLoader for the data.
 
         Args:
-            train: true if DataLoader for training.
+            train: true if DataLoader is for training.
         """
         indices = (slice(0, self.num_train) if train
                    else slice(self.num_train, None))
         return self.get_tensorloader((self.X, self.y), train, indices)
+
+
+class LinearRegressionScratch(Module):
+    """
+    Linear Regression Module from scratch.
+
+    Args:
+        w: weight tensor.
+        b: bias tensor.
+
+    """
+    def __init__(self, num_inputs: int, lr: float, sigma: int = 0.01):
+        super().__init__()
+        self.save_hyperparameters()
+        self.w = torch.normal(0, sigma, (num_inputs, 1), requires_grad=True)
+        self.b = torch.zeros(1, requires_grad=True)
+
+    def forward(self, X: torch.tensor):
+        """Forward pass of the linear network."""
+        return X @ self.w + self.b
+
+    def loss(self, y_hat: torch.tensor, y: torch.tensor):
+        """Calculate MSE loss with mean reduction.
+
+        Args:
+            y_hat: estimated `y` values.
+            y: true `y` values.
+        """
+        loss = (y_hat - y.reshape(y_hat.shape))**2 / 2
+        return loss.mean()
+
+    def configure_optimizers(self):
+        """Initialize SGD optimizer"""
+        return SGD([self.w, self.b], self.lr)
+
+
+class SGD(HyperParameters):
+    """
+    SGD Optimizer.
+
+    Args:
+        params: list of parameters to be optimized.
+            Must allow gradient calculation.
+        lr: learning rate to be used for SGD.
+
+    """
+    def __init__(self, params: List[torch.tensor], lr: float):
+        self.save_hyperparameters()
+
+    def step(self):
+        """Perform a single update of parameters."""
+        for param in self.params:
+            # do not account for batch size because
+            # it is already accounted in loss calculation
+            param -= self.lr * param.grad
+
+    def zero_grad(self):
+        """Zero gradient for each parameter.
+
+        Zeroing the gradients before running the training
+        loop is important otherwise, the gradient would be
+        a combination of the old gradient that was already used
+        for updating the parameters.
+        """
+        for param in self.params:
+            # param.grad.zero_ will return error if param.grad is None
+            if param.grad is not None:
+                param.grad.zero_()
+
+
+class LinearRegression(Module):
+    """
+    The fully connected layer is defined in Linear and LazyLinear.
+    The later allows users to only specify the output dimension, while the
+    former additionally asks for how many inputs go into this layer.
+    """
+    def __init__(self, lr):
+        super().__init__()
+        self.save_hyperparameters()
+        self.net = nn.LazyLinear(1)
+        self.net.weight.data.normal_(0, 0.01)
+        self.net.bias.data.fill_(0)
+
+    def forward(self, X):
+        """The linear regression model."""
+        return self.net(X)
+
+    def loss(self, y_hat, y):
+        r"""
+        The MSELoss class computes the mean squared error
+        (without the 0.5 factor)
+        $$\ell(x, y) = L = \{l_1,\dots,l_N\}^\top, \quad
+            l_n = \left( x_n - y_n \right)^2,$$
+        """
+        fn = nn.MSELoss()
+        return fn(y_hat, y)
 
 
 to = lambda x, *args, **kwargs: x.to(*args, **kwargs)  # noqa: E731
