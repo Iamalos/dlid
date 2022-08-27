@@ -308,7 +308,7 @@ class Module(nn.Module, HyperParameters):
     """The base class for all the models in the course.
 
     Attributes:
-        plot_train_per_epoch:
+        plot_train_per_epoch: how often to update the plot with training loss
         plot_valid_per_epoch:
         board: ProgressBoard for plotting data.
 
@@ -323,12 +323,12 @@ class Module(nn.Module, HyperParameters):
         self.save_hyperparameters()
         self.board = ProgressBoard()
 
-    def loss(self, y_hat, y):
-        """TODO"""
+    def loss(self, y_hat: torch.tensor, y: torch.tensor):
+        """Calculate loss between fitted values and observed values."""
         raise NotImplementedError
 
     def forward(self, X):
-        """TODO"""
+        """Make a forward pass on the data."""
         assert hasattr(self, 'net'), 'Neural network is not defined.'
         return self.net(X)
 
@@ -367,7 +367,7 @@ class Module(nn.Module, HyperParameters):
         self.plot('loss', loss, train=False)
 
     def configure_optimizers(self):
-        """TODO"""
+        """Configure optimizers for training the `model`."""
         raise NotImplementedError
 
 
@@ -428,18 +428,19 @@ class Trainer(HyperParameters):
     Base class used to train learnable parameters.
 
     Attributes:
-        max_epochs:
-        num_gpus:
-        gradient_clip_value:
-        train_dataloader
-        val_dataloader
-        num_train_batches
-        num_val_batches
-        model
-        optim
-        epoch
-        train_batch_idx
-        val_batch_idx
+        max_epochs: number of epochs to run train.
+        num_gpus: number of gpus to use when on gpu.
+        gradient_clip_value: ??
+        train_dataloader: DataLoader for training data.
+        val_dataloader: DataLoader for validation data.
+        num_train_batches: number of training batches.
+        num_val_batches: number of validation batches.
+        model: model used for training, subclass of nn.Module
+            and dlid.Module.
+        optim: optimzier to use for updating the `parameters`.
+        epoch: current epoch.
+        train_batch_idx: current training batch index.
+        val_batch_idx: current validation batch index.
 
     """
     def __init__(
@@ -471,7 +472,7 @@ class Trainer(HyperParameters):
 
         Args:
             model: model that inherits from Module to be fit on the data.
-            data: dataloader that inherits from DataModuel to be used
+            data: dataloader that inherits from DataModule used
                 when fitting the data.
 
         """
@@ -591,7 +592,7 @@ class LinearRegressionScratch(Module):
         return loss.mean()
 
     def configure_optimizers(self):
-        """Initialize SGD optimizer"""
+        """Initialize SGD optimizer."""
         return SGD([self.w, self.b], self.lr)
 
 
@@ -631,30 +632,36 @@ class SGD(HyperParameters):
 
 class LinearRegression(Module):
     """
+    Concise implementation of Linear Regrression.
+
     The fully connected layer is defined in Linear and LazyLinear.
     The later allows users to only specify the output dimension, while the
     former additionally asks for how many inputs go into this layer.
+
+    Args:
+        net
     """
-    def __init__(self, lr):
+    def __init__(self, lr: float):
         super().__init__()
         self.save_hyperparameters()
         self.net = nn.LazyLinear(1)
         self.net.weight.data.normal_(0, 0.01)
         self.net.bias.data.fill_(0)
 
-    def forward(self, X):
+    def forward(self, X: torch.tensor):
         """The linear regression model."""
         return self.net(X)
 
-    def loss(self, y_hat, y):
-        r"""
-        The MSELoss class computes the mean squared error
-        (without the 0.5 factor)
-        $$\ell(x, y) = L = \{l_1,\dots,l_N\}^\top, \quad
-            l_n = \left( x_n - y_n \right)^2,$$
+    def loss(self, y_hat: torch.tensor, y: torch.tensor):
+        """
+        The MSELoss class computes the mean squared error.
         """
         fn = nn.MSELoss()
         return fn(y_hat, y)
+
+    def configure_optimizers(self):
+        """Initialize SGD optimizer."""
+        return torch.optim.SGD(self.parameters(), self.lr)
 
 
 to = lambda x, *args, **kwargs: x.to(*args, **kwargs)  # noqa: E731
