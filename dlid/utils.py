@@ -332,12 +332,20 @@ class Module(nn.Module, HyperParameters):
         assert hasattr(self, 'net'), 'Neural network is not defined.'
         return self.net(X)
 
-    def plot(self, key, value, train):
-        """TODO"""
+    def plot(self, key: str, value: Number, train: bool):
+        """TODO
+
+        Args:
+            key:
+            value:
+            train: if training mode or validation mode.
+
+        """
         assert hasattr(self, 'trainer'), 'Trainer is not inited.'
         self.board.xlabel = 'epoch'
         if train:
-            # ??????
+            # train_batch_idx is calculated as epoch * num_train_batches,
+            # so to convert it to epochs, divide by num_train_batches.
             x = self.trainer.train_batch_idx / \
                 self.trainer.num_train_batches
             n = self.trainer.num_train_batches / \
@@ -353,7 +361,12 @@ class Module(nn.Module, HyperParameters):
                         every_n=int(n))
 
     def training_step(self, batch: List[torch.tensor]):
-        """TODO"""
+        """Calculate loss for training data and call `plot` method.
+
+        Args:
+            batch: list of X and Y sampled values.
+
+        """
         # batch consists of [X, Y]
         # so *batch[:-1] takes X values and
         # batch[-1] takes Y values
@@ -362,7 +375,12 @@ class Module(nn.Module, HyperParameters):
         return loss
 
     def validation_step(self, batch: List[torch.tensor]):
-        """TODO"""
+        """Calculate loss for validation data and call `plot` method.
+
+        Args:
+            batch: list of X and Y sampled values.
+
+        """
         loss = self.loss(self(*batch[:-1]), batch[-1])
         self.plot('loss', loss, train=False)
 
@@ -439,7 +457,7 @@ class Trainer(HyperParameters):
             and dlid.Module.
         optim: optimzier to use for updating the `parameters`.
         epoch: current epoch.
-        train_batch_idx: current training batch index.
+        train_batch_idx: current training batch index. Accumulates over epochs.
         val_batch_idx: current validation batch index.
 
     """
