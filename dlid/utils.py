@@ -255,7 +255,7 @@ class ProgressBoard(HyperParameters):
         if len(points) != every_n:
             return
 
-        def mean(x): sum(x) / len(x)
+        def mean(x): return sum(x) / len(x)
 
         # Add to line array averaged x and y points to plot.
         line.append(Point(mean([p.x for p in points]),
