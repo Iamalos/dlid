@@ -308,11 +308,9 @@ class Module(nn.Module, HyperParameters):
     """The base class for all the models in the course.
 
     Attributes:
-        plot_train_per_epoch: how often to update the plot with training loss
-        plot_valid_per_epoch:
+        plot_train_per_epoch: number of training plot updates per one epoch.
+        plot_valid_per_epoch: number of validation plot updates per pne epochs.
         board: ProgressBoard for plotting data.
-
-        TODO: complete doc string
     """
     def __init__(
         self,
@@ -327,17 +325,21 @@ class Module(nn.Module, HyperParameters):
         """Calculate loss between fitted values and observed values."""
         raise NotImplementedError
 
-    def forward(self, X):
+    def forward(self, X: torch.tensor):
         """Make a forward pass on the data."""
         assert hasattr(self, 'net'), 'Neural network is not defined.'
         return self.net(X)
 
     def plot(self, key: str, value: Number, train: bool):
-        """TODO
+        """Plots the current value.
+
+        Plots the training pr validation metric depending of the
+        frequency of updates provided by `plot_train_per_epoch` and
+        `plot_val_per_epoch`.
 
         Args:
-            key:
-            value:
+            key: name of the line on the plot (e.g. 'loss').
+            value: value to be plotted.
             train: if training mode or validation mode.
 
         """
@@ -346,8 +348,12 @@ class Module(nn.Module, HyperParameters):
         if train:
             # train_batch_idx is calculated as epoch * num_train_batches,
             # so to convert it to epochs, divide by num_train_batches.
+            # x is an epoch (x-axis for plot)
             x = self.trainer.train_batch_idx / \
                 self.trainer.num_train_batches
+            # frequency of updates within one epoch. E.g. if 4 batches per
+            # one epoch and `plot_train_per_epoch` is 2, then we need to
+            # update the graph every 2 batches.
             n = self.trainer.num_train_batches / \
                 self.plot_train_per_epoch
         else:
@@ -361,7 +367,9 @@ class Module(nn.Module, HyperParameters):
                         every_n=int(n))
 
     def training_step(self, batch: List[torch.tensor]):
-        """Calculate loss for training data and call `plot` method.
+        """Calculate loss for training batch and call `plot` method.
+
+        This method is called inside each epoch run for each batch of data.
 
         Args:
             batch: list of X and Y sampled values.
