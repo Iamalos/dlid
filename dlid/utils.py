@@ -1,4 +1,4 @@
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Union
 import numpy as np
 import time
 import torch
@@ -12,6 +12,7 @@ from matplotlib_inline import backend_inline
 import torchvision
 from torchvision import transforms
 from .plotting import show_images
+from torch.nn import functional as F
 
 __all__ = ['Timer', 'Accumulator', 'try_gpu', 'try_all_gpus',
            'add_to_class', 'HyperParameters', 'ProgressBoard', 'Module',
@@ -393,7 +394,6 @@ class Module(nn.Module, HyperParameters):
 
         Args:
             batch: list of X and Y sampled values.
-
         """
         loss = self.loss(self(*batch[:-1]), batch[-1])
         self.plot('loss', loss, train=False)
@@ -598,7 +598,11 @@ class LinearRegressionScratch(Module):
     """
     Linear Regression Module from scratch.
 
-    Args:
+    Attributes:
+        num_inputs: number of inputs in the Input layer.
+        lr: learning rate for Trainer.
+        sigma: standard deviation for initializing weights from
+            Normal distribution.
         w: weight tensor.
         b: bias tensor.
 
@@ -632,7 +636,7 @@ class SGD(HyperParameters):
     """
     SGD Optimizer.
 
-    Args:
+    Attributes:
         params: list of parameters to be optimized.
             Must allow gradient calculation.
         lr: learning rate to be used for SGD.
@@ -670,8 +674,9 @@ class LinearRegression(Module):
     The later allows users to only specify the output dimension, while the
     former additionally asks for how many inputs go into this layer.
 
-    Args:
+    Attributes:
         net: neural net model.
+        lr: learning rate for Trainer.
     """
     def __init__(self, lr: float):
         super().__init__()
@@ -697,7 +702,15 @@ class LinearRegression(Module):
 
 
 class FashionMNIST(DataModule):
-    def __init__(self, batch_size=64, resize=(28, 28)):
+    """FashinMNIST Dataloader class.
+
+    Attributes:
+        batch_size: size of each batch to be used.
+        resize: image size to be used for resizing each image.
+    """
+    def __init__(self,
+                 batch_size: int = 64,
+                 resize: Tuple[int, int] = (28, 28)):
         super().__init__()
         self.save_hyperparameters()
         trans = transforms.Compose([transforms.Resize(resize),
@@ -707,8 +720,8 @@ class FashionMNIST(DataModule):
         self.val = torchvision.datasets.FashionMNIST(
             root=self.root, train=False, download=True, transform=trans)
 
-    def text_labels(self, indices):
-        """Return text labels."""
+    def text_labels(self, indices: Union[torch.tensor, List]):
+        """Return text labels associated with numerical class."""
         labels = ['t-shirt', 'trouser', 'pullover', 'dress', 'coat',
                   'sandal', 'shirt', 'sneaker', 'bag', 'ankle boot']
         return [labels[int(i)] for i in indices]
@@ -721,18 +734,48 @@ class FashionMNIST(DataModule):
             shuffle=train,
             num_workers=self.num_workers)
 
-    def vizualize(self, batch, nrows=1, ncols=8, labels=[]):
+    def vizualize(self,
+                  batch: torch.Tensor,
+                  labels: List[str] = [],
+                  **kwargs):
+        """Show a batch of examples.
+
+        Args:
+            batch: torch array of images.
+            labels: array of titles for each plot.
+        """
         X, y = batch
         if not labels:
             labels = self.text_labels(y)
-        show_images(X.squeeze(1), nrows, ncols, titles=labels)
+        show_images(X.squeeze(1), titles=labels, **kwargs)
 
 
 class Classifier(Module):
-    def validation_step(self, batch):
+    """Base class for Classifier models."""
+    def validation_step(self, batch: List[torch.tensor]):
+        """Calculate loss for validation data and call `plot` method.
+
+        Args:
+            batch: array of X and Y sampled values.
+        """
         y_hat = self(*batch[:-1])
         self.plot('loss', self.loss(y_hat, batch[-1]), train=False)
         self.plot('acc', self.accuracy(y_hat, batch[-1]), train=False)
+
+    def accuracy(self, Y_hat, Y, averaged=True):
+        """Compute the number of correct predictions."""
+        Y_hat = Y_hat.reshape((-1, Y_hat.shape[-1]))
+        preds = Y_hat.argmax(dim=1).type(Y.dtype)
+        compare = (preds == Y.reshape(-1)).type(torch.float32)
+        return compare.mean() if averaged else compare
+
+    def configure_optimizers(self):
+        return torch.optim.SGD(self.parameters(), self.lr)
+
+    def loss(self, Y_hat, Y, averaged=True):
+        Y_hat = Y_hat.reshape((-1, Y_hat.shape[-1]))
+        Y = Y.reshape((-1,))
+        return F.cross_entropy(Y_hat, Y, reduction='mean' if averaged else 'none')
 
 
 to = lambda x, *args, **kwargs: x.to(*args, **kwargs)  # noqa: E731
