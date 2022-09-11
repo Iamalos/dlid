@@ -3,24 +3,25 @@ from matplotlib import pyplot as plt
 from IPython import display
 import torch
 
-__all__ = ['set_axes', 'plot']
+__all__ = ['set_axes', 'plot', 'show_images']
 
 
 def set_axes(axes: plt.Axes, xlabel: str, ylabel: str,
              xlim: Union[int, float],
              ylim: Union[int, float],
-             xscale: str, yscale: str,
+             xscale: str, 
+             yscale: str,
              legend: List[str]) -> plt.Axes:
     """
-    Customizes the provided `axes` according to the provided parameters
+    Customizes the provided `axes`.
 
-    :param axes: Axes to to customize
-    :xlim: limit for the x-axis
-    :ylim: limit for the y-axis
-    :xscale: 'linear' or 'log' scale for xaxis
-    :yscale: 'linear' or 'log' scale for yaxis
-    :legend: list of labels for the plotted figures
-
+    Aegs:
+        axes: Axes to to customize.
+        xlim: limit for the x-axis.
+        ylim: limit for the y-axis.
+        xscale: 'linear' or 'log' scale for x-axis.
+        yscale: 'linear' or 'log' scale for y-axis.
+        legend: list of labels for the plotted figures.
     """
     # set labels
     axes.set_xlabel(xlabel)
@@ -64,7 +65,7 @@ def set_global_graph_params(figsize: Tuple[float, float] = (3.5, 2.5),
         plt.style.use("dark_background")
 
 
-def plot(X: Union[list, torch.Tensor],
+def plot(X: Union[List, torch.Tensor],
          Y: Union[list, torch.Tensor] = None,
          xlabel: str = None, ylabel: str = None,
          legend: List[str] = None, xlim: Union[int, float] = None,
@@ -77,6 +78,9 @@ def plot(X: Union[list, torch.Tensor],
     Main plotting function that takes `X` as an array and Y as a
     list of tensors (functions on `X`). Optionally applies scaling
     and limits on x and y axis
+
+    Args:
+
     """
 
     set_global_graph_params(figsize, darkmode)
@@ -114,3 +118,31 @@ def plot(X: Union[list, torch.Tensor],
             axes.plot(y, fmt)
 
     set_axes(axes, xlabel, ylabel, xlim, ylim, xscale, yscale, legend)
+
+
+def show_images(imgs: Union[torch.Tensor, List[torch.Tensor]],
+                num_rows: int,
+                num_cols: int,
+                titles: List[str] = None,
+                scale: int = 1.5):
+    """Plot images.
+    
+    Args:
+
+    
+    """
+    figsize = (num_cols * scale, num_rows * scale)
+    _, axes = plt.subplots(num_rows, num_cols, figsize=figsize)
+    # convert axes shape from (n_rows, n_cols) to (n_rows*n_cols,)
+    axes = axes.flatten()
+    for i, (ax, img) in enumerate(zip(axes, imgs)):
+        try:
+            img = img.detach().numpy()
+        except:  # noqa #E722
+            pass
+        ax.imshow(img)
+        ax.axes.get_xaxis().set_visible(False)
+        ax.axes.get_yaxis().set_visible(False)
+        if titles:
+            ax.set_title(titles[i])
+    return axes

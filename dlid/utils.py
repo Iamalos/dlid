@@ -9,10 +9,16 @@ from IPython import display
 from numbers import Number
 from torch import nn
 from matplotlib_inline import backend_inline
+import torchvision
+from torchvision import transforms
+from .plotting import show_images
 
 __all__ = ['Timer', 'Accumulator', 'try_gpu', 'try_all_gpus',
            'add_to_class', 'HyperParameters', 'ProgressBoard', 'Module',
-           'DataModule', 'Trainer', 'SyntheticRegressionData']
+           'DataModule', 'Trainer', 'SyntheticRegressionData',
+           'LinearRegressionScratch', 'SGD', 'LinearRegression',
+           'FashionMNIST', 'Classifier'
+           ]
 
 
 class Timer:
@@ -402,8 +408,8 @@ class DataModule(HyperParameters):
     The base class for the data.
 
     A data loader is a generator that yields a batch of data every time
-     it is called. The batch is then fed into the `training_step` method
-     of Module to compute loss.
+    it is called. The batch is then fed into the `training_step` method
+    of Module to compute loss.
 
      Attributes:
         root: path to the data folder.
@@ -665,7 +671,7 @@ class LinearRegression(Module):
     former additionally asks for how many inputs go into this layer.
 
     Args:
-        net
+        net: neural net model.
     """
     def __init__(self, lr: float):
         super().__init__()
@@ -688,6 +694,45 @@ class LinearRegression(Module):
     def configure_optimizers(self):
         """Initialize SGD optimizer."""
         return torch.optim.SGD(self.parameters(), self.lr)
+
+
+class FashionMNIST(DataModule):
+    def __init__(self, batch_size=64, resize=(28, 28)):
+        super().__init__()
+        self.save_hyperparameters()
+        trans = transforms.Compose([transforms.Resize(resize),
+                                    transforms.ToTensor()])
+        self.train = torchvision.datasets.FashionMNIST(
+            root=self.root, train=True, download=True, transform=trans)
+        self.val = torchvision.datasets.FashionMNIST(
+            root=self.root, train=False, download=True, transform=trans)
+
+    def text_labels(self, indices):
+        """Return text labels."""
+        labels = ['t-shirt', 'trouser', 'pullover', 'dress', 'coat',
+                  'sandal', 'shirt', 'sneaker', 'bag', 'ankle boot']
+        return [labels[int(i)] for i in indices]
+
+    def get_dataloader(self, train):
+        data = self.train if train else self.val
+        return torch.utils.data.DataLoader(
+            data,
+            self.batch_size,
+            shuffle=train,
+            num_workers=self.num_workers)
+
+    def vizualize(self, batch, nrows=1, ncols=8, labels=[]):
+        X, y = batch
+        if not labels:
+            labels = self.text_labels(y)
+        show_images(X.squeeze(1), nrows, ncols, titles=labels)
+
+
+class Classifier(Module):
+    def validation_step(self, batch):
+        y_hat = self(*batch[:-1])
+        self.plot('loss', self.loss(y_hat, batch[-1]), train=False)
+        self.plot('acc', self.accuracy(y_hat, batch[-1]), train=False)
 
 
 to = lambda x, *args, **kwargs: x.to(*args, **kwargs)  # noqa: E731
