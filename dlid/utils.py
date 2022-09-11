@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 import collections
 from IPython import display
 from numbers import Number
-from torch import nn
+from torch import Tensor, nn
 from matplotlib_inline import backend_inline
 import torchvision
 from torchvision import transforms
@@ -720,7 +720,7 @@ class FashionMNIST(DataModule):
         self.val = torchvision.datasets.FashionMNIST(
             root=self.root, train=False, download=True, transform=trans)
 
-    def text_labels(self, indices: Union[torch.tensor, List]):
+    def text_labels(self, indices: Union[Tensor, List]):
         """Return text labels associated with numerical class."""
         labels = ['t-shirt', 'trouser', 'pullover', 'dress', 'coat',
                   'sandal', 'shirt', 'sneaker', 'bag', 'ankle boot']
@@ -735,7 +735,7 @@ class FashionMNIST(DataModule):
             num_workers=self.num_workers)
 
     def vizualize(self,
-                  batch: torch.Tensor,
+                  batch: Tensor,
                   labels: List[str] = [],
                   **kwargs):
         """Show a batch of examples.
@@ -752,7 +752,7 @@ class FashionMNIST(DataModule):
 
 class Classifier(Module):
     """Base class for Classifier models."""
-    def validation_step(self, batch: List[torch.tensor]):
+    def validation_step(self, batch: List[Tensor]):
         """Calculate loss for validation data and call `plot` method.
 
         Args:
@@ -762,21 +762,46 @@ class Classifier(Module):
         self.plot('loss', self.loss(y_hat, batch[-1]), train=False)
         self.plot('acc', self.accuracy(y_hat, batch[-1]), train=False)
 
-    def accuracy(self, Y_hat, Y, averaged=True):
-        """Compute the number of correct predictions."""
+    def accuracy(self,
+                 Y_hat: Tensor,
+                 Y: Tensor,
+                 averaged: bool = True):
+        """Compute the number of correct predictions.
+
+        Args:
+            Y_hat: estimated classes by the classifier.
+            Y: true classes.
+            averaged: provides average accuracy if true,
+                otherwise the list of 1.0 and 0.0.
+        """
         Y_hat = Y_hat.reshape((-1, Y_hat.shape[-1]))
         preds = Y_hat.argmax(dim=1).type(Y.dtype)
         compare = (preds == Y.reshape(-1)).type(torch.float32)
         return compare.mean() if averaged else compare
 
-    def configure_optimizers(self):
-        return torch.optim.SGD(self.parameters(), self.lr)
+    def loss(self,
+             Y_hat: Tensor,
+             Y: Tensor,
+             averaged: bool = True):
+        """Calculates cross entropy loss for the classifier.
 
-    def loss(self, Y_hat, Y, averaged=True):
+        Args:
+            Y_hat: estimated classes by the classifier.
+            Y: true classes.
+            averaged: provides average accuracy if true,
+                otherwise the list of 1.0 and 0.0.
+        """
         Y_hat = Y_hat.reshape((-1, Y_hat.shape[-1]))
         Y = Y.reshape((-1,))
-        return F.cross_entropy(Y_hat, Y, reduction='mean' if averaged else 'none')
+        return F.cross_entropy(Y_hat, Y,
+                               reduction='mean' if averaged else 'none')
+
+    def configure_optimizers(self):
+        """Configure optimizers for training the `model`."""
+        return torch.optim.SGD(self.parameters(), self.lr)
 
 
 to = lambda x, *args, **kwargs: x.to(*args, **kwargs)  # noqa: E731
 numpy = lambda x, *args, **kwargs: x.detach().numpy(*args, **kwargs)  # noqa: E731 E501
+# See docs for F.cross_entropy for example. They redefine
+# Tensor to be used fior typing purposes
