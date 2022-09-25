@@ -75,7 +75,7 @@ def plot(X: Union[List, torch.Tensor],
          figsize: Tuple[float, float] = (3.5, 2.5),
          axes: plt.Axes = None, darkmode: bool = False):
     """
-    Main plotting functionю
+    Main plotting function.
 
     Accepts `X` as an array and Y as a list of tensors (functions on `X`).
     Optionally applies scaling and limits on x-axis and y-axis.
@@ -145,7 +145,7 @@ def show_images(imgs: Union[torch.Tensor, List[torch.Tensor]],
         num_rows: number of rows in a plotting grid.
         num_cols: number of columns in a plotting grid.
         titles: array of titles for each plot.
-        scale: distacne between each plot.
+        scale: distance between each plot.
     """
     figsize = (num_cols * scale, num_rows * scale)
     _, axes = plt.subplots(num_rows, num_cols, figsize=figsize)

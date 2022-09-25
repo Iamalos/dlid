@@ -94,13 +94,6 @@ class Accumulator:
         return self.data[idx]
 
 
-def try_gpu(i: int = 0):
-    """Return gpu(i) if exists, otherwise return cpu()."""
-    if torch.cuda.device_count() > i+1:
-        return torch.device(f'cuda:{i}')
-    return torch.device('cpu')
-
-
 def use_svg_display():
     """Use the svg format to display a plot in Jupyter.
     Defined in :numref:`sec_calculus`"""
@@ -116,6 +109,22 @@ def set_figsize(figsize=(3.5, 2.5)):
 
 def cpu():
     return torch.device('cpu')
+
+
+def gpu(i: int = 0):
+    return torch.device(f'cuda:{i}')
+
+
+def num_gpus():
+    """Return number of gpus."""
+    return torch.cuda.device_count()
+
+
+def try_gpu(i: int = 0):
+    """Return gpu(i) if exists, otherwise return cpu()."""
+    if num_gpus() >= i + 1:
+        return gpu(i)
+    return cpu()
 
 
 def try_all_gpus():
@@ -482,7 +491,7 @@ class Trainer(HyperParameters):
         gradient_clip_value=0
     ):
         self.save_hyperparameters()
-        assert num_gpus == 0, 'No GPU support yet'
+        self.gpus = [gpu(i) for i in range(min(num_gpus, num_gpus()))]
 
     def prepare_data(self, data: DataModule):
         self.train_dataloader = data.train_dataloader()
@@ -494,6 +503,8 @@ class Trainer(HyperParameters):
     def prepare_model(self, model: Module):
         model.trainer = self
         model.board.xlim = [0, self.max_epochs]
+        if self.gpus:
+            model.to(self.gpus[0])
         self.model = model
 
     def fit(self, model: Module, data: DataModule):
@@ -524,6 +535,8 @@ class Trainer(HyperParameters):
         Args:
             batch: sample of data yielded by DataLoader.
         """
+        if self.gpus:
+            batch = [a.to(self.gpus[0]) for a in batch]
         return batch
 
     def fit_epoch(self):
