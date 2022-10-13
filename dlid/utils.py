@@ -18,7 +18,7 @@ __all__ = ['Timer', 'Accumulator', 'try_gpu', 'try_all_gpus',
            'add_to_class', 'HyperParameters', 'ProgressBoard', 'Module',
            'DataModule', 'Trainer', 'SyntheticRegressionData',
            'LinearRegressionScratch', 'SGD', 'LinearRegression',
-           'FashionMNIST', 'Classifier', 'num_gpus', 'gpu', 'try_gpu',
+           'FashionMNIST', 'Classifier', 'get_num_gpus', 'gpu', 'try_gpu',
            'try_all_gpus'
            ]
 
@@ -116,14 +116,14 @@ def gpu(i: int = 0):
     return torch.device(f'cuda:{i}')
 
 
-def num_gpus():
+def get_num_gpus():
     """Return number of gpus."""
     return torch.cuda.device_count()
 
 
 def try_gpu(i: int = 0):
     """Return gpu(i) if exists, otherwise return cpu()."""
-    if num_gpus() >= i + 1:
+    if get_num_gpus() >= i + 1:
         return gpu(i)
     return cpu()
 
@@ -492,7 +492,7 @@ class Trainer(HyperParameters):
         gradient_clip_value=0
     ):
         self.save_hyperparameters()
-        self.gpus = [gpu(i) for i in range(min(num_gpus, num_gpus()))]
+        self.gpus = [gpu(i) for i in range(min(num_gpus, get_num_gpus()))]
 
     def prepare_data(self, data: DataModule):
         self.train_dataloader = data.train_dataloader()
