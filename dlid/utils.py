@@ -18,7 +18,7 @@ __all__ = ['Timer', 'Accumulator', 'try_gpu', 'try_all_gpus',
            'add_to_class', 'HyperParameters', 'ProgressBoard', 'Module',
            'DataModule', 'Trainer', 'SyntheticRegressionData',
            'LinearRegressionScratch', 'SGD', 'LinearRegression',
-           'FashionMNIST', 'Classifier'
+           'FashionMNIST', 'Classifier', 'num_gpus'
            ]
 
 
