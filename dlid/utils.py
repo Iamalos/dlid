@@ -1,4 +1,4 @@
-from typing import List, Tuple, Optional, Union
+from typing import Callable, List, Tuple, Optional, Union
 import numpy as np
 import time
 import torch
@@ -146,6 +146,31 @@ def add_to_class(Class):
     def wrapper(obj):
         setattr(Class, obj.__name__, obj)
     return wrapper
+
+
+def corr2d(X: torch.Tensor, K: torch.Tensor):
+    """Compute 2D cross-correlation.
+
+    Args:
+        X: input matrix to which kernel is applied.
+        K: kernel used for cross-correlation computation.
+    """
+    h, w = K.shape
+    Y = torch.zeros((X.shape[0] - h + 1), X.shape[1] - w + 1)
+    for i in range(Y.shape[0]):
+        for j in range(Y.shape[1]):
+            Y[i, j] = (X[i:i+h, j:j+w]*K).sum()
+    return Y
+
+
+def init_cnn(module: Union(nn.Linear, nn.Conv2d)):
+    """Initialize weights for neural net.
+
+    Args:
+        module: a neural net module that can be eithrer Linear or Convolutional
+    """
+    if type(module) == nn.Linear or type(module) == nn.Conv2d:
+        nn.init.xavier_uniform_(module.weight)
 
 
 class HyperParameters:
@@ -338,11 +363,11 @@ class Module(nn.Module, HyperParameters):
         self.save_hyperparameters()
         self.board = ProgressBoard()
 
-    def loss(self, y_hat: torch.tensor, y: torch.tensor):
+    def loss(self, y_hat: torch.Tensor, y: torch.Tensor):
         """Calculate loss between fitted values and observed values."""
         raise NotImplementedError
 
-    def forward(self, X: torch.tensor):
+    def forward(self, X: torch.Tensor):
         """Make a forward pass on the data."""
         assert hasattr(self, 'net'), 'Neural network is not defined.'
         return self.net(X)
@@ -383,7 +408,7 @@ class Module(nn.Module, HyperParameters):
                         ('train_' if train else 'val_') + key,
                         every_n=int(n))
 
-    def training_step(self, batch: List[torch.tensor]):
+    def training_step(self, batch: List[torch.Tensor]):
         """Calculate loss for training batch and call `plot` method.
 
         This method is called inside each epoch run for each batch of data.
@@ -399,7 +424,7 @@ class Module(nn.Module, HyperParameters):
         self.plot('loss', loss, train=True)
         return loss
 
-    def validation_step(self, batch: List[torch.tensor]):
+    def validation_step(self, batch: List[torch.Tensor]):
         """Calculate loss for validation data and call `plot` method.
 
         Args:
@@ -407,6 +432,18 @@ class Module(nn.Module, HyperParameters):
         """
         loss = self.loss(self(*batch[:-1]), batch[-1])
         self.plot('loss', loss, train=False)
+
+    def apply_init(self, inputs: torch.Tensor, init: Callable = None):
+        """
+        Apply `init` function to each layer of a net.
+
+        Args:
+            inputs: input in order to initialize lazy layers.
+            init: init function to be applied for each layer.
+        """
+        self.forward(*inputs)
+        if init is not None:
+            self.net.apply(init)
 
     def configure_optimizers(self):
         """Configure optimizers for training the `model`."""
@@ -809,6 +846,20 @@ class Classifier(Module):
         Y = Y.reshape((-1,))
         return F.cross_entropy(Y_hat, Y,
                                reduction='mean' if averaged else 'none')
+
+    def layer_summary(self, X_shape: Union[list, tuple]):
+        """
+        Prints shapes for each layer of a net.
+
+        Args:
+            X_shape: shape of an input in order to initialize
+                Lazy layers.
+        """
+        # as we have lazy init we need to provide a input shape
+        X = torch.randn(*X_shape)
+        for layer in self.net:
+            X = layer(X)
+            print(layer.__class__.__name__, 'output shape:\t', X.shape)
 
     def configure_optimizers(self):
         """Configure optimizers for training the `model`."""
