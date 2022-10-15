@@ -163,7 +163,7 @@ def corr2d(X: torch.Tensor, K: torch.Tensor):
     return Y
 
 
-def init_cnn(module: Union(nn.Linear, nn.Conv2d)):
+def init_cnn(module: Union[nn.Linear, nn.Conv2d]):
     """Initialize weights for neural net.
 
     Args:
