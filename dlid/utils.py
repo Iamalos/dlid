@@ -19,7 +19,7 @@ __all__ = ['Timer', 'Accumulator', 'try_gpu', 'try_all_gpus',
            'DataModule', 'Trainer', 'SyntheticRegressionData',
            'LinearRegressionScratch', 'SGD', 'LinearRegression',
            'FashionMNIST', 'Classifier', 'get_num_gpus', 'gpu', 'try_gpu',
-           'try_all_gpus'
+           'try_all_gpus', 'init_cnn'
            ]
 
 
@@ -567,7 +567,7 @@ class Trainer(HyperParameters):
         for self.epoch in range(self.max_epochs):
             self.fit_epoch()
 
-    def prepare_batch(self, batch: List[torch.tensor]):
+    def prepare_batch(self, batch: List[Tensor]):
         """Prepares the batch befre training loop.
 
         Args:
