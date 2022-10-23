@@ -167,7 +167,7 @@ def init_cnn(module: Union[nn.Linear, nn.Conv2d]):
     """Initialize weights for neural net.
 
     Args:
-        module: a neural net module that can be eithrer Linear or Convolutional
+        module: a neural net module that can be either Linear or Convolutional
     """
     if type(module) == nn.Linear or type(module) == nn.Conv2d:
         nn.init.xavier_uniform_(module.weight)
